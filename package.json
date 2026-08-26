@@ -1,0 +1,22 @@
+{
+  "name": "acp-sandbox",
+  "version": "0.1.0",
+  "description": "A hosted mock merchant implementing the Agentic Commerce Protocol (ACP) checkout API, for testing AI shopping-agent integrations end to end without real money or a real store.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.14",
+    "nanoid": "^5.0.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

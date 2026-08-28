@@ -2,6 +2,7 @@
   "name": "acp-sandbox",
   "version": "0.1.0",
   "description": "A hosted mock merchant implementing the Agentic Commerce Protocol (ACP) checkout API, for testing AI shopping-agent integrations end to end without real money or a real store.",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

@@ -2,7 +2,7 @@
 
 A hosted mock merchant implementing the [Agentic Commerce Protocol](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol) (ACP) checkout API — for testing AI shopping-agent integrations end to end without real money, a real store, or real buyer data.
 
-Live at **https://acp-sandbox.flo-voice1.com**
+Live at **https://acp-sandbox.flo-voice1.com** — open it in a browser for the quickstart page, or hit the endpoints below directly.
 
 ## Why
 

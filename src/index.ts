@@ -5,6 +5,7 @@ import { issueApiKey, isValidApiKey } from "./auth.js";
 import { CATALOG } from "./catalog.js";
 import { cancelSession, completeSession, createSession, loadSession, updateSession } from "./checkout.js";
 import type { ApiError } from "./types.js";
+import { LANDING_HTML } from "./landing.js";
 
 const app = new Hono();
 
@@ -35,7 +36,13 @@ function logRequest(opts: {
   );
 }
 
-app.get("/", (c) => c.text("acp-sandbox: a mock ACP merchant for testing shopping-agent checkouts. See /catalog and README."));
+app.get("/", (c) => {
+  // JSON clients (agents probing the root) still get the terse text; browsers get the page.
+  if ((c.req.header("Accept") ?? "").includes("text/html")) {
+    return c.html(LANDING_HTML);
+  }
+  return c.text("acp-sandbox: a mock ACP merchant for testing shopping-agent checkouts. See / in a browser, plus /catalog and the README.");
+});
 
 // Zero-friction self-serve key issuance — no email verification, this is a
 // test sandbox, not a product with real accounts.
@@ -45,6 +52,16 @@ app.post("/keys", async (c) => {
   const key = issueApiKey(email);
   return c.json({ api_key: key });
 });
+
+app.get("/robots.txt", (c) => c.text(`User-agent: *\nAllow: /\nDisallow: /logs\nDisallow: /checkout_sessions\n\nSitemap: https://acp-sandbox.flo-voice1.com/sitemap.xml\n`));
+
+app.get("/sitemap.xml", (c) =>
+  c.text(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://acp-sandbox.flo-voice1.com/</loc></url>\n</urlset>\n`,
+    200,
+    { "Content-Type": "application/xml" },
+  ),
+);
 
 app.get("/catalog", (c) => c.json({ items: CATALOG }));
 

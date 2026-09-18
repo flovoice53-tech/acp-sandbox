@@ -5,7 +5,7 @@ import { issueApiKey, isValidApiKey } from "./auth.js";
 import { CATALOG } from "./catalog.js";
 import { cancelSession, completeSession, createSession, loadSession, updateSession } from "./checkout.js";
 import type { ApiError } from "./types.js";
-import { LANDING_HTML } from "./landing.js";
+import { LANDING_HTML, orderHtml } from "./landing.js";
 
 const app = new Hono();
 
@@ -64,6 +64,25 @@ app.get("/sitemap.xml", (c) =>
 );
 
 app.get("/catalog", (c) => c.json({ items: CATALOG }));
+
+// completeSession() hands agents an order.permalink_url pointing here — it
+// must resolve. No auth: a permalink is meant to be an openable receipt link,
+// same as a real merchant's order confirmation page, and this is test data.
+app.get("/orders/:id", (c) => {
+  const id = c.req.param("id");
+  const row = db
+    .prepare(`SELECT order_data FROM checkout_sessions WHERE order_data IS NOT NULL AND json_extract(order_data, '$.id') = ?`)
+    .get(id) as { order_data: string } | undefined;
+  if (!row) {
+    const error: ApiError = { type: "invalid_request", code: "order_not_found", message: "No such order" };
+    return c.json(error, 404);
+  }
+  const order = JSON.parse(row.order_data);
+  if ((c.req.header("Accept") ?? "").includes("text/html")) {
+    return c.html(orderHtml(order));
+  }
+  return c.json(order);
+});
 
 // --- ACP checkout_sessions endpoints ---
 const checkout = new Hono();

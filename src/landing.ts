@@ -122,3 +122,63 @@ acp-sandbox is an independent testing tool, not affiliated with OpenAI or Stripe
 </div>
 </body>
 </html>`;
+
+// Order confirmation page — this is what order.permalink_url (returned by
+// POST /checkout_sessions/{id}/complete) resolves to when opened in a browser.
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export function orderHtml(order: {
+  id: string;
+  order_number: string;
+  status: string;
+  line_items: { name?: string; quantity: number; unit_amount?: number }[];
+  totals: { type: string; display_text: string; amount: number }[];
+}): string {
+  const rows = order.line_items
+    .map(
+      (li) =>
+        `<tr><td>${escapeHtml(li.name ?? "")}</td><td>${li.quantity}</td><td>${((li.unit_amount ?? 0) / 100).toFixed(2)}</td></tr>`,
+    )
+    .join("\n");
+  const totalRows = order.totals
+    .map((t) => `<tr><td>${escapeHtml(t.display_text)}</td><td>${(t.amount / 100).toFixed(2)}</td></tr>`)
+    .join("\n");
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order ${escapeHtml(order.order_number)} — acp-sandbox</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{ color-scheme: light dark; --fg:#1a1a1a; --bg:#fbfbf9; --muted:#5c5c5c; --line:#e3e3dd; --accent:#b3401f; }
+  @media (prefers-color-scheme: dark){ :root{ --fg:#e8e8e3; --bg:#161613; --muted:#a0a09a; --line:#33332e; --accent:#e0805f; } }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--fg);background:var(--bg)}
+  .wrap{max-width:600px;margin:0 auto;padding:48px 22px 80px}
+  h1{font-size:24px;margin:0 0 4px}
+  .status{display:inline-block;font-size:12px;color:var(--accent);border:1px solid var(--line);border-radius:100px;padding:2px 10px;margin:8px 0 24px}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:0 0 24px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+  td:last-child,th:last-child{text-align:right}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Order ${escapeHtml(order.order_number)}</h1>
+<span class="status">${escapeHtml(order.status)}</span>
+<table>
+<tr><th>Item</th><th>Qty</th><th>Amount</th></tr>
+${rows}
+</table>
+<table>
+${totalRows}
+</table>
+<p><a href="/">acp-sandbox</a> — this is a mock order from a test sandbox, not a real purchase.</p>
+</div>
+</body>
+</html>`;
+}

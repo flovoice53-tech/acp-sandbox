@@ -86,6 +86,7 @@ export const LANDING_HTML = `<!doctype html>
 
 <p>5 — inspect exactly what your agent sent:</p>
 <pre><code>curl ${BASE}/logs -H "Authorization: Bearer acps_test_..."</code></pre>
+<p>Or open the <a href="/dashboard">dashboard</a> and paste your key to see each checkout session with every request and response.</p>
 
 <h2>Endpoints</h2>
 <table>

@@ -6,6 +6,7 @@ import { CATALOG } from "./catalog.js";
 import { cancelSession, completeSession, createSession, loadSession, updateSession } from "./checkout.js";
 import type { ApiError } from "./types.js";
 import { LANDING_HTML, orderHtml } from "./landing.js";
+import { DASHBOARD_HTML } from "./dashboard.js";
 
 const app = new Hono();
 
@@ -156,6 +157,8 @@ checkout.post("/:id/cancel", async (c) => {
 
 app.route("/checkout_sessions", checkout);
 
+app.get("/dashboard", (c) => c.html(DASHBOARD_HTML));
+
 // Developer-facing log viewer for a given key, to debug what their agent sent.
 app.get("/logs", (c) => {
   const auth = c.req.header("Authorization") ?? "";
@@ -165,7 +168,9 @@ app.get("/logs", (c) => {
     return c.json(error, 401);
   }
   const rows = db
-    .prepare(`SELECT method, path, request_body, response_status, response_body, created_at FROM request_log WHERE api_key = ? ORDER BY id DESC LIMIT 50`)
+    // checkout_session_id lets /dashboard group requests into orders; the
+    // existing fields are unchanged for anyone already reading this.
+    .prepare(`SELECT checkout_session_id, method, path, request_body, response_status, response_body, created_at FROM request_log WHERE api_key = ? ORDER BY id DESC LIMIT 50`)
     .all(token);
   return c.json({ requests: rows });
 });

@@ -69,7 +69,7 @@ Base URL: https://acp-sandbox.flo-voice1.com
 
 - Get a test key: \`POST /keys\` (optional JSON body \`{"email": "..."}\`) returns \`{"api_key": "..."}\`. Send it as \`Authorization: Bearer <key>\`.
 - Products: \`GET /catalog\` lists the demo items and their ids (no auth).
-- Checkout: \`POST /checkout_sessions\` creates a session from line items; \`GET /checkout_sessions/:id\` reads it; \`POST /checkout_sessions/:id\` updates it; \`POST /checkout_sessions/:id/complete\` completes it; \`POST /checkout_sessions/:id/cancel\` cancels it.
+- Checkout: \`POST /checkout_sessions\` with \`{"line_items": [{"id": "item_demo_mug", "quantity": 1}]}\` creates a session (status \`ready_for_payment\`);\`GET /checkout_sessions/:id\` reads it; \`POST /checkout_sessions/:id\` updates it; \`POST /checkout_sessions/:id/complete\` completes it; \`POST /checkout_sessions/:id/cancel\` cancels it.
 - Payment is mocked: any non-empty \`payment_data\` on complete is accepted as paid. No real payment is processed.
 - A completed session returns an order whose \`permalink_url\` opens a receipt page at \`/orders/:id\`.
 - Debugging: \`GET /logs\` (with your key) returns every request your agent sent and the response it got; \`/dashboard\` shows the same in a browser, grouped by checkout session.

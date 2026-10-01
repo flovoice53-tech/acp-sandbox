@@ -56,6 +56,37 @@ app.post("/keys", async (c) => {
 
 app.get("/robots.txt", (c) => c.text(`User-agent: *\nAllow: /\nDisallow: /logs\nDisallow: /checkout_sessions\n\nSitemap: https://acp-sandbox.flo-voice1.com/sitemap.xml\n`));
 
+// For AI assistants answering "where can I test ACP?" — the first outside
+// user (2026-09-25) found the sandbox through Gemini. Links stay on this
+// domain: the GitHub repo isn't reliably reachable.
+const LLMS_TXT = `# acp-sandbox
+
+> A hosted mock merchant that implements the Agentic Commerce Protocol (ACP) checkout API. Point an ACP client or AI shopping agent at it to test the full checkout flow (create, update, complete, cancel) end to end, with no signup, no real store and no real money.
+
+Base URL: https://acp-sandbox.flo-voice1.com
+
+## How it works
+
+- Get a test key: \`POST /keys\` (optional JSON body \`{"email": "..."}\`) returns \`{"api_key": "..."}\`. Send it as \`Authorization: Bearer <key>\`.
+- Products: \`GET /catalog\` lists the demo items and their ids (no auth).
+- Checkout: \`POST /checkout_sessions\` creates a session from line items; \`GET /checkout_sessions/:id\` reads it; \`POST /checkout_sessions/:id\` updates it; \`POST /checkout_sessions/:id/complete\` completes it; \`POST /checkout_sessions/:id/cancel\` cancels it.
+- Payment is mocked: any non-empty \`payment_data\` on complete is accepted as paid. No real payment is processed.
+- A completed session returns an order whose \`permalink_url\` opens a receipt page at \`/orders/:id\`.
+- Debugging: \`GET /logs\` (with your key) returns every request your agent sent and the response it got; \`/dashboard\` shows the same in a browser, grouped by checkout session.
+
+## Pages
+
+- [Home](https://acp-sandbox.flo-voice1.com/): overview and quickstart.
+- [Dashboard](https://acp-sandbox.flo-voice1.com/dashboard): per-session request/response log viewer.
+- [Catalog](https://acp-sandbox.flo-voice1.com/catalog): demo product ids.
+
+## Related
+
+- [agent-identity-mcp](https://www.npmjs.com/package/agent-identity-mcp): an MCP server that gives an AI agent a disposable email address and a real UK phone number, to test signup/verification flows end to end.
+`;
+
+app.get("/llms.txt", (c) => c.text(LLMS_TXT));
+
 app.get("/sitemap.xml", (c) =>
   c.text(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://acp-sandbox.flo-voice1.com/</loc></url>\n</urlset>\n`,

@@ -1,4 +1,7 @@
-import { nanoid } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
+
+// Readable order numbers: no _ or -, and no look-alikes like 0/O or 1/I.
+const orderNumber = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 8);
 import { db } from "./db.js";
 import { findCatalogItem } from "./catalog.js";
 import { PayPalError, captureOrder, createOrder, getOrder, paypalConfigured, toPayPalValue } from "./paypal.js";
@@ -331,7 +334,7 @@ export async function completeSession(
     id: orderId,
     checkout_session_id: session.id,
     permalink_url: `${process.env.PUBLIC_BASE_URL ?? "https://acp-sandbox.flo-voice1.com"}/orders/${orderId}`,
-    order_number: orderId.slice(4, 12).toUpperCase(),
+    order_number: orderNumber(),
     status: "confirmed",
     line_items: session.line_items,
     totals: session.totals,

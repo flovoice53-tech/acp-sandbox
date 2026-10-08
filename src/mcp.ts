@@ -130,7 +130,10 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
       return ok({
         ...summarize(result.session),
         ...(issued ? { api_key: key, note: "New sandbox key — pass this api_key to every later call." } : {}),
-        dashboard_url: `${PUBLIC_BASE_URL}/dashboard`,
+        // The key rides in the fragment, which browsers never send to the
+        // server — so it stays out of access logs and referrers.
+        dashboard_url: `${PUBLIC_BASE_URL}/dashboard#key=${key}`,
+        dashboard_note: "The user can open dashboard_url to watch every step of this checkout.",
       });
     },
   );
@@ -222,6 +225,9 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
         const payment = session.payment;
         if (!payment) return fail("no_payment: Call request_paypal_payment first.");
         if (payment.status !== "awaiting_approval") {
+          // Logged once approved (not on every still-waiting poll) so the
+          // dashboard shows the moment the buyer said yes.
+          log(key, "wait_for_payment_approval", { session_id }, 200, session, session_id);
           return ok({ approved: true, ...summarize(session), next_step: "Call complete_checkout with payment: \"paypal\"." });
         }
         // Ask PayPal directly — the buyer may approve without ever reaching

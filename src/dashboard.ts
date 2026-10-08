@@ -42,7 +42,7 @@ export const DASHBOARD_HTML = `<!doctype html>
 <body>
 <div class="wrap">
   <h1>Dashboard</h1>
-  <p class="muted">Your checkout sessions and every request your agent sent, with the sandbox's response. Paste the test key you got from <code>POST /keys</code>. It stays in this tab only. <a href="/">Back to acp-sandbox</a></p>
+  <p class="muted">Your checkout sessions and every request your agent sent, with the sandbox's response. Paste the test key you got from <code>POST /keys</code>. It stays in this tab only. Agents connected over MCP hand you a link with the key already in it. <a href="/">Back to acp-sandbox</a></p>
   <form id="keyform">
     <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="acps_test_..." aria-label="API key">
     <button class="primary" type="submit">Show</button>
@@ -93,7 +93,11 @@ export const DASHBOARD_HTML = `<!doctype html>
     return d;
   }
 
-  function render(requests) {
+  var PAYMENT_TEXT = { awaiting_approval: "PayPal: waiting for buyer approval", approved: "PayPal: approved, not captured yet", captured: "PayPal: paid" };
+  var PAYMENT_CLASS = { awaiting_approval: "warn", approved: "warn", captured: "ok" };
+
+  function render(requests, sessionsNow) {
+    sessionsNow = sessionsNow || {};
     out.textContent = "";
     if (!requests.length) {
       status.textContent = "No requests yet for this key. Create a checkout session and refresh.";
@@ -113,7 +117,9 @@ export const DASHBOARD_HTML = `<!doctype html>
 
     order.reverse().forEach(function (id) {
       var steps = sessions[id];
-      var latest = null;
+      // Prefer the session's current state from the server; fall back to the
+      // last logged response for sessions older than that field.
+      var latest = sessionsNow[id] || null;
       for (var i = steps.length - 1; i >= 0 && !latest; i--) {
         var body = parse(steps[i].response_body);
         if (body && body.status) latest = body;
@@ -127,6 +133,16 @@ export const DASHBOARD_HTML = `<!doctype html>
         var total = (latest.totals || []).filter(function (t) { return t.type === "total"; })[0];
         if (total && typeof total.amount === "number") {
           head.appendChild(el("span", "muted", (total.amount / 100).toFixed(2) + " " + String(latest.currency || "").toUpperCase()));
+        }
+        var pay = latest.payment;
+        if (pay && PAYMENT_TEXT[pay.status]) {
+          var payText = PAYMENT_TEXT[pay.status] + (pay.capture_id ? " (capture " + pay.capture_id + ")" : "");
+          head.appendChild(el("span", "pill " + PAYMENT_CLASS[pay.status], payText));
+        }
+        if (latest.receipt_url) {
+          var a = el("a", "", "receipt " + (latest.order_number || ""));
+          a.href = latest.receipt_url;
+          head.appendChild(a);
         }
       }
       head.appendChild(el("span", "muted", steps.length + " request(s)"));
@@ -158,7 +174,7 @@ export const DASHBOARD_HTML = `<!doctype html>
         try { sessionStorage.setItem(KEY_STORE, key); } catch (e) {}
         refresh.hidden = false;
         forget.hidden = false;
-        render(data.requests || []);
+        render(data.requests || [], data.sessions);
       })
       .catch(function (err) {
         out.textContent = "";
@@ -184,10 +200,19 @@ export const DASHBOARD_HTML = `<!doctype html>
     forget.hidden = true;
   });
 
-  try {
-    var saved = sessionStorage.getItem(KEY_STORE);
-    if (saved) { input.value = saved; load(saved); }
-  } catch (e) {}
+  // An agent can hand the user /dashboard#key=... — the fragment never
+  // reaches the server. Take the key, then drop it from the address bar.
+  var fromLink = /^#key=(acps_test_[A-Za-z0-9_-]+)$/.exec(location.hash);
+  if (fromLink) {
+    input.value = fromLink[1];
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    load(fromLink[1]);
+  } else {
+    try {
+      var saved = sessionStorage.getItem(KEY_STORE);
+      if (saved) { input.value = saved; load(saved); }
+    } catch (e) {}
+  }
 })();
 </script>
 </body>

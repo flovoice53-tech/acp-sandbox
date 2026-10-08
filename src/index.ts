@@ -52,7 +52,7 @@ app.get("/robots.txt", (c) => c.text(`User-agent: *\nAllow: /\nDisallow: /logs\n
 // domain: the GitHub repo isn't reliably reachable.
 const LLMS_TXT = `# acp-sandbox
 
-> A hosted mock merchant that implements the Agentic Commerce Protocol (ACP) checkout API. Point an ACP client or AI shopping agent at it to test the full checkout flow (create, update, complete, cancel) end to end, with no signup, no real store and no real money.
+> A hosted mock merchant that implements the Agentic Commerce Protocol (ACP) checkout API, with real PayPal sandbox payments and a hosted MCP server. Point an ACP client or AI shopping agent at it to test the full checkout flow (create, update, pay, complete, cancel) end to end, with no signup, no real store and no real money.
 
 Base URL: https://acp-sandbox.flo-voice1.com
 
@@ -61,7 +61,8 @@ Base URL: https://acp-sandbox.flo-voice1.com
 - Get a test key: \`POST /keys\` (optional JSON body \`{"email": "..."}\`) returns \`{"api_key": "..."}\`. Send it as \`Authorization: Bearer <key>\`.
 - Products: \`GET /catalog\` lists the demo items and their ids (no auth).
 - Checkout: \`POST /checkout_sessions\` with \`{"line_items": [{"id": "item_demo_mug", "quantity": 1}]}\` creates a session (status \`ready_for_payment\`);\`GET /checkout_sessions/:id\` reads it; \`POST /checkout_sessions/:id\` updates it; \`POST /checkout_sessions/:id/complete\` completes it; \`POST /checkout_sessions/:id/cancel\` cancels it.
-- Payment is mocked: any non-empty \`payment_data\` on complete is accepted as paid. No real payment is processed.
+- Real PayPal (sandbox) payments: \`POST /checkout_sessions/:id/paypal_order\` creates a PayPal order for the exact total and returns \`payment.approve_url\` for the buyer; after they approve, complete with \`{"payment_data": {"provider": "paypal", "order_id": "<payment.paypal_order_id>"}}\` and the payment is captured — the order goes through only if PayPal confirms it. Any other \`payment_data\` is mocked (accepted as paid, nothing processed).
+- MCP: \`https://acp-sandbox.flo-voice1.com/mcp\` (Streamable HTTP, no auth) exposes the same checkout as tools — list_products, create_checkout, update_checkout, request_paypal_payment, wait_for_payment_approval, complete_checkout, get_checkout, cancel_checkout — so an AI agent can shop and pay with PayPal while the human approves the payment.
 - A completed session returns an order whose \`permalink_url\` opens a receipt page at \`/orders/:id\`.
 - Debugging: \`GET /logs\` (with your key) returns every request your agent sent and the response it got; \`/dashboard\` shows the same in a browser, grouped by checkout session.
 
@@ -259,8 +260,17 @@ app.get("/logs", (c) => {
     // checkout_session_id lets /dashboard group requests into orders; the
     // existing fields are unchanged for anyone already reading this.
     .prepare(`SELECT checkout_session_id, method, path, request_body, response_status, response_body, created_at FROM request_log WHERE api_key = ? ORDER BY id DESC LIMIT 50`)
-    .all(token);
-  return c.json({ requests: rows });
+    .all(token) as { checkout_session_id: string | null }[];
+  // The current state of each session in the log — a payment approved on
+  // PayPal's side never shows up as a logged response, so the last logged
+  // body alone would show it as still waiting.
+  const ids = [...new Set(rows.map((r) => r.checkout_session_id).filter((id): id is string => Boolean(id)))];
+  const sessions: Record<string, unknown> = {};
+  for (const id of ids) {
+    const s = loadSession(token, id);
+    if (s) sessions[id] = { status: s.status, currency: s.currency, totals: s.totals, payment: s.payment ?? null, order_number: s.order?.order_number ?? null, receipt_url: s.order?.permalink_url ?? null };
+  }
+  return c.json({ requests: rows, sessions });
 });
 
 const port = Number(process.env.PORT ?? 3900);

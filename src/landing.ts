@@ -11,7 +11,7 @@ export const LANDING_HTML = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>acp-sandbox — test your Agentic Commerce Protocol (ACP) integration</title>
-<meta name="description" content="A hosted mock merchant that implements the Agentic Commerce Protocol checkout API. Point your ACP client at it to test create / update / complete / cancel end to end — no signup, no real money, no real store.">
+<meta name="description" content="A hosted mock merchant that implements the Agentic Commerce Protocol checkout API, with real PayPal sandbox payments and a hosted MCP server so any AI agent can shop and pay. No signup, no real money.">
 <link rel="canonical" href="${BASE}/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="acp-sandbox — test your Agentic Commerce Protocol integration">
@@ -50,10 +50,26 @@ export const LANDING_HTML = `<!doctype html>
 
 <p>
   <span class="tag">no signup</span>
-  <span class="tag">no email verification</span>
+  <span class="tag">real PayPal sandbox payments</span>
+  <span class="tag">hosted MCP server</span>
   <span class="tag">no real charges</span>
   <span class="tag">open source</span>
 </p>
+
+<h2>Let an AI agent shop — and pay with PayPal</h2>
+<p>acp-sandbox is also a hosted MCP server. Connect any MCP client (Claude, Cursor, …) to it and the agent gets tools to browse the catalog, build a cart, ask you to pay with PayPal, and place the order. You stay in control of the money: the agent can only hand you a PayPal approval link — the payment is captured only after you approve it on PayPal, and only for the exact cart total.</p>
+<pre><code>MCP server URL:  ${BASE}/mcp
+Auth:            none (a sandbox key is created on the first checkout)</code></pre>
+<p>In Claude: <em>Settings → Connectors → Add custom connector</em>, paste the URL, then ask: <em>“Buy me a demo mug and two notebooks from the acp-sandbox store and pay with PayPal.”</em> Approve the payment with a <a href="https://developer.paypal.com/tools/sandbox/accounts/">PayPal sandbox buyer account</a>. The agent gives you a dashboard link where every step it took is logged.</p>
+<table>
+<tr><th>Tool</th><th>What the agent uses it for</th></tr>
+<tr><td><code>list_products</code></td><td>See what the store sells and the prices</td></tr>
+<tr><td><code>create_checkout</code> / <code>update_checkout</code></td><td>Build or change the cart (an ACP checkout session)</td></tr>
+<tr><td><code>request_paypal_payment</code></td><td>Create a PayPal order for the exact total and get the approval link for the human</td></tr>
+<tr><td><code>wait_for_payment_approval</code></td><td>Wait until PayPal confirms the buyer approved</td></tr>
+<tr><td><code>complete_checkout</code></td><td>Capture the payment and place the order — fails unless PayPal confirms the money</td></tr>
+<tr><td><code>get_checkout</code> / <code>cancel_checkout</code></td><td>Check status, or back out</td></tr>
+</table>
 
 <h2>The gap this fills</h2>
 <p>ACP defines how a shopping agent talks to a merchant to complete a purchase. Stripe's test mode covers the <em>payment</em> side — test cards, test keys — but there is no hosted "fake merchant" you can point a third-party ACP client at to check that your own logic actually works: building a session, patching line items, handling a <code>422</code>, reading back an <code>Order</code>. That is all this does.</p>
@@ -78,11 +94,16 @@ export const LANDING_HTML = `<!doctype html>
     "buyer": {"email": "buyer@example.com"}
   }'</code></pre>
 
-<p>4 — complete it (any <code>payment_data</code> is accepted):</p>
-<pre><code>curl -X POST ${BASE}/checkout_sessions/{id}/complete \\
+<p>4 — pay with PayPal (sandbox): create the PayPal order, have the buyer approve it at <code>payment.approve_url</code>, then complete with that order id:</p>
+<pre><code>curl -X POST ${BASE}/checkout_sessions/{id}/paypal_order \\
+  -H "Authorization: Bearer acps_test_..."
+# =&gt; session with payment.approve_url (open it, approve with a sandbox buyer)
+
+curl -X POST ${BASE}/checkout_sessions/{id}/complete \\
   -H "Authorization: Bearer acps_test_..." \\
   -H "Content-Type: application/json" \\
-  -d '{"payment_data": {"handler_id": "test", "instrument": {"type": "card", "credential": {"type": "spt", "token": "tok_test"}}}}'</code></pre>
+  -d '{"payment_data": {"provider": "paypal", "order_id": "&lt;payment.paypal_order_id&gt;"}}'</code></pre>
+<p>The order is placed only if PayPal reports the capture <code>COMPLETED</code> for the session's exact amount. Not approved yet → <code>422 payment_not_approved</code>; cart changed after the PayPal order was made → the old order is dropped and you create a new one. Any other <code>payment_data</code> keeps the old mock behaviour (accepted as paid, no processing) for quick happy-path tests.</p>
 
 <p>5 — inspect exactly what your agent sent:</p>
 <pre><code>curl ${BASE}/logs -H "Authorization: Bearer acps_test_..."</code></pre>
@@ -96,15 +117,17 @@ export const LANDING_HTML = `<!doctype html>
 <tr><td>POST</td><td><code>/checkout_sessions</code></td><td>Create a session</td></tr>
 <tr><td>GET</td><td><code>/checkout_sessions/{id}</code></td><td>Retrieve a session</td></tr>
 <tr><td>POST</td><td><code>/checkout_sessions/{id}</code></td><td>Update a session (line items, buyer, fulfillment)</td></tr>
-<tr><td>POST</td><td><code>/checkout_sessions/{id}/complete</code></td><td>Finalize checkout, creates an <code>order</code></td></tr>
+<tr><td>POST</td><td><code>/checkout_sessions/{id}/paypal_order</code></td><td>Create the PayPal (sandbox) order for the session total; returns the buyer's approval link</td></tr>
+<tr><td>POST</td><td><code>/checkout_sessions/{id}/complete</code></td><td>Finalize checkout (captures the PayPal payment if <code>provider: "paypal"</code>), creates an <code>order</code></td></tr>
 <tr><td>POST</td><td><code>/checkout_sessions/{id}/cancel</code></td><td>Cancel a session</td></tr>
-<tr><td>GET</td><td><code>/logs</code></td><td>Last 50 requests made with your key</td></tr>
+<tr><td>GET</td><td><code>/logs</code></td><td>Last 50 requests made with your key, plus each session's current state</td></tr>
+<tr><td>POST</td><td><code>/mcp</code></td><td>Hosted MCP server (Streamable HTTP) — the same checkout as agent tools</td></tr>
 </table>
 <p>Responses follow the real ACP <code>CheckoutSession</code> / <code>Order</code> / <code>Error</code> schemas (2026-04-17 spec version) for the fields v1 supports. Out-of-scope fields are omitted, not faked.</p>
 
 <h2>What v1 does not do</h2>
 <ul>
-<li>No real payment processing — <code>complete</code> always succeeds.</li>
+<li>Payments are PayPal <em>sandbox</em> only — never real money. Other payment methods are mocked.</li>
 <li>No OAuth <code>delegate_authentication</code> flow.</li>
 <li>No fulfillment options (shipping / pickup) — sessions go straight to <code>ready_for_payment</code>.</li>
 <li>Fixed demo catalog, not a real product feed.</li>

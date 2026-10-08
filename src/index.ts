@@ -16,34 +16,16 @@ import {
 import type { ApiError } from "./types.js";
 import { LANDING_HTML, orderHtml, paypalReturnHtml } from "./landing.js";
 import { DASHBOARD_HTML } from "./dashboard.js";
+import { logRequest } from "./log.js";
+import { buildMcpServer } from "./mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { RESPONSE_ALREADY_SENT } from "@hono/node-server/utils/response";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 const app = new Hono();
 
 function errorResponse(error: ApiError, status: 400 | 404 | 405 | 422 = 400) {
   return { body: error, status };
-}
-
-function logRequest(opts: {
-  apiKey?: string;
-  checkoutSessionId?: string;
-  method: string;
-  path: string;
-  requestBody: unknown;
-  responseStatus: number;
-  responseBody: unknown;
-}) {
-  db.prepare(
-    `INSERT INTO request_log (api_key, checkout_session_id, method, path, request_body, response_status, response_body)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    opts.apiKey ?? null,
-    opts.checkoutSessionId ?? null,
-    opts.method,
-    opts.path,
-    JSON.stringify(opts.requestBody ?? null),
-    opts.responseStatus,
-    JSON.stringify(opts.responseBody ?? null),
-  );
 }
 
 app.get("/", (c) => {
@@ -220,6 +202,51 @@ app.get("/paypal/cancel", (c) => c.html(paypalReturnHtml({ approved: false, canc
 
 app.get("/dashboard", (c) => c.html(DASHBOARD_HTML));
 
+// --- Hosted MCP server: the same checkout, as tools an AI agent can call ---
+const MCP_REQUESTS_PER_IP_PER_MINUTE = 120;
+const mcpCounters = new Map<string, { windowStart: number; count: number }>();
+function allowMcp(ip: string): boolean {
+  const now = Date.now();
+  const entry = mcpCounters.get(ip);
+  if (!entry || now - entry.windowStart >= 60_000) {
+    mcpCounters.set(ip, { windowStart: now, count: 1 });
+    return true;
+  }
+  if (entry.count >= MCP_REQUESTS_PER_IP_PER_MINUTE) return false;
+  entry.count += 1;
+  return true;
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of mcpCounters) if (now - entry.windowStart >= 60_000) mcpCounters.delete(ip);
+}, 60_000).unref();
+
+const rpcError = (message: string) => ({ jsonrpc: "2.0", error: { code: -32001, message }, id: null });
+
+app.post("/mcp", async (c) => {
+  // nginx sets X-Real-IP from the TCP peer, and the app only listens on loopback.
+  const ip = c.req.header("X-Real-IP") ?? "unknown";
+  if (!allowMcp(ip)) return c.json(rpcError("Rate limited — too many requests, try again in a minute."), 429);
+  const body = await c.req.json().catch(() => undefined);
+  if (body === undefined) return c.json(rpcError("Request body must be JSON."), 400);
+
+  const auth = c.req.header("Authorization") ?? "";
+  const connectionKey = (auth.startsWith("Bearer ") ? auth.slice(7).trim() : "") || c.req.query("key") || undefined;
+
+  // Stateless: one server + transport per request, nothing to resume.
+  const { incoming, outgoing } = c.env as { incoming: IncomingMessage; outgoing: ServerResponse };
+  const server = buildMcpServer(connectionKey);
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  outgoing.on("close", () => {
+    void transport.close();
+    void server.close();
+  });
+  await server.connect(transport);
+  await transport.handleRequest(incoming, outgoing, body);
+  return RESPONSE_ALREADY_SENT;
+});
+app.on(["GET", "DELETE"], "/mcp", (c) => c.body(null, 405, { Allow: "POST" }));
+
 // Developer-facing log viewer for a given key, to debug what their agent sent.
 app.get("/logs", (c) => {
   const auth = c.req.header("Authorization") ?? "";
@@ -237,6 +264,6 @@ app.get("/logs", (c) => {
 });
 
 const port = Number(process.env.PORT ?? 3900);
-serve({ fetch: app.fetch, port }, (info) => {
+serve({ fetch: app.fetch, port, hostname: "127.0.0.1" }, (info) => {
   console.log(`acp-sandbox listening on http://localhost:${info.port}`);
 });

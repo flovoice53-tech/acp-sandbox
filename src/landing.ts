@@ -135,7 +135,7 @@ curl -X POST ${BASE}/checkout_sessions/{id}/complete \\
 
 <h2>Source &amp; more</h2>
 <ul>
-<li>Code + full docs: <a href="https://github.com/flovoice53-tech/acp-sandbox">github.com/flovoice53-tech/acp-sandbox</a></li>
+<li>Code + full docs: <a href="https://gitlab.com/florin-builds/acp-sandbox">gitlab.com/florin-builds/acp-sandbox</a></li>
 <li>ACP specification: <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol">agentic-commerce-protocol/agentic-commerce-protocol</a></li>
 </ul>
 

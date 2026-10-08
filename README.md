@@ -2,7 +2,7 @@
 
 A hosted mock merchant implementing the [Agentic Commerce Protocol](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol) (ACP) checkout API, with **real PayPal sandbox payments** and a **hosted MCP server** — so an AI agent can shop, ask a human to pay with PayPal, and place the order, end to end, without real money or a real store.
 
-Live at **https://acp-sandbox.flo-voice1.com** · MCP server: **https://acp-sandbox.flo-voice1.com/mcp**
+Live at **https://acp-sandbox.flo-voice1.com** · MCP server: **https://acp-sandbox.flo-voice1.com/mcp** · Source: **https://gitlab.com/florin-builds/acp-sandbox**
 
 ## Why
 

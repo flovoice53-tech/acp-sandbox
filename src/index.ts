@@ -1,11 +1,20 @@
+import "./env.js";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { db } from "./db.js";
 import { issueApiKey, isValidApiKey } from "./auth.js";
 import { CATALOG } from "./catalog.js";
-import { cancelSession, completeSession, createSession, loadSession, updateSession } from "./checkout.js";
+import {
+  cancelSession,
+  completeSession,
+  createPayPalOrderForSession,
+  createSession,
+  loadSession,
+  recordPayPalApproval,
+  updateSession,
+} from "./checkout.js";
 import type { ApiError } from "./types.js";
-import { LANDING_HTML, orderHtml } from "./landing.js";
+import { LANDING_HTML, orderHtml, paypalReturnHtml } from "./landing.js";
 import { DASHBOARD_HTML } from "./dashboard.js";
 
 const app = new Hono();
@@ -168,11 +177,24 @@ checkout.post("/:id/complete", async (c) => {
   const apiKey = c.get("apiKey" as never) as string;
   const id = c.req.param("id");
   const body = await c.req.json().catch(() => ({}));
-  const result = completeSession(apiKey, id, body);
+  const result = await completeSession(apiKey, id, body);
   const status = "error" in result ? (result.status ?? 400) : 200;
   const responseBody = "error" in result ? result.error : result.session;
   logRequest({ apiKey, method: "POST", path: `/checkout_sessions/${id}/complete`, requestBody: body, responseStatus: status, responseBody, checkoutSessionId: id });
-  return c.json(responseBody, status as 200 | 400 | 404 | 405);
+  return c.json(responseBody, status as 200 | 400 | 404 | 405 | 422 | 502 | 503);
+});
+
+// Not part of ACP: the merchant-side step that creates the real (sandbox)
+// PayPal order for the session's total. The response is the session with
+// payment.approve_url — the link the buyer approves the payment at.
+checkout.post("/:id/paypal_order", async (c) => {
+  const apiKey = c.get("apiKey" as never) as string;
+  const id = c.req.param("id");
+  const result = await createPayPalOrderForSession(apiKey, id);
+  const status = "error" in result ? (result.status ?? 400) : 200;
+  const responseBody = "error" in result ? result.error : result.session;
+  logRequest({ apiKey, method: "POST", path: `/checkout_sessions/${id}/paypal_order`, requestBody: null, responseStatus: status, responseBody, checkoutSessionId: id });
+  return c.json(responseBody, status as 200 | 400 | 404 | 405 | 502 | 503);
 });
 
 checkout.post("/:id/cancel", async (c) => {
@@ -187,6 +209,14 @@ checkout.post("/:id/cancel", async (c) => {
 });
 
 app.route("/checkout_sessions", checkout);
+
+// Where PayPal sends the buyer back. PayPal appends ?token=<order id>.
+app.get("/paypal/return", async (c) => {
+  const orderId = c.req.query("token") ?? "";
+  const session = orderId ? await recordPayPalApproval(orderId) : undefined;
+  return c.html(paypalReturnHtml(session ? { approved: session.payment?.status === "approved", sessionId: session.id } : null), session ? 200 : 404);
+});
+app.get("/paypal/cancel", (c) => c.html(paypalReturnHtml({ approved: false, canceled: true })));
 
 app.get("/dashboard", (c) => c.html(DASHBOARD_HTML));
 

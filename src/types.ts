@@ -106,6 +106,20 @@ export type CheckoutSession = {
   created_at: string;
   updated_at: string;
   order?: Order;
+  // Set once the merchant has created a PayPal order for this session's
+  // total (POST /checkout_sessions/:id/paypal_order). Not part of ACP — the
+  // sandbox's own record of the real payment behind the checkout.
+  payment?: PayPalPayment;
+};
+
+export type PayPalPayment = {
+  provider: "paypal";
+  paypal_order_id: string;
+  approve_url: string;
+  amount: number; // minor units, the session total the order was created for
+  currency: string;
+  status: "awaiting_approval" | "approved" | "captured";
+  capture_id?: string;
 };
 
 export type ApiError = {

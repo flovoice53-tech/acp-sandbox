@@ -183,3 +183,50 @@ ${totalRows}
 </body>
 </html>`;
 }
+
+// Where the buyer lands after approving (or canceling) the PayPal payment.
+// The agent, not this page, completes the checkout — this just tells the
+// human their part is done.
+export function paypalReturnHtml(state: { approved: boolean; sessionId?: string; canceled?: boolean } | null): string {
+  const heading = !state
+    ? "Unknown PayPal order"
+    : state.canceled
+      ? "Payment canceled"
+      : state.approved
+        ? "Payment approved"
+        : "Payment not approved yet";
+  const body = !state
+    ? "This PayPal order isn't linked to a checkout session on this sandbox."
+    : state.canceled
+      ? "No payment was taken. Your agent can create a new PayPal order if you want to try again."
+      : state.approved
+        ? "Thanks — you can close this tab. Your shopping agent can now complete the checkout; the payment is captured only when it does."
+        : "PayPal hasn't confirmed the approval. Go back to PayPal and approve the payment, or ask your agent for a new link.";
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${heading} — acp-sandbox</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{ color-scheme: light dark; --fg:#1a1a1a; --bg:#fbfbf9; --muted:#5c5c5c; --line:#e3e3dd; --accent:#b3401f; }
+  @media (prefers-color-scheme: dark){ :root{ --fg:#e8e8e3; --bg:#161613; --muted:#a0a09a; --line:#33332e; --accent:#e0805f; } }
+  body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--fg);background:var(--bg)}
+  .wrap{max-width:600px;margin:0 auto;padding:48px 22px 80px}
+  h1{font-size:24px;margin:0 0 12px}
+  p{color:var(--muted)}
+  code{font-size:14px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>${heading}</h1>
+<p>${body}</p>
+${state?.sessionId ? `<p>Checkout session: <code>${escapeHtml(state.sessionId)}</code> — follow it on the <a href="/dashboard">dashboard</a>.</p>` : ""}
+<p><a href="/">acp-sandbox</a> — PayPal sandbox payment, no real money.</p>
+</div>
+</body>
+</html>`;
+}

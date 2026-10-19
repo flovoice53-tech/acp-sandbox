@@ -45,6 +45,9 @@ app.post("/keys", async (c) => {
   return c.json({ api_key: key });
 });
 
+// IndexNow ownership key (same key on every host, see public/80c5e6c528195e6dc886ed6fc86c04b4.txt in sms-florin).
+app.get("/80c5e6c528195e6dc886ed6fc86c04b4.txt", (c) => c.text("80c5e6c528195e6dc886ed6fc86c04b4"));
+
 app.get("/robots.txt", (c) => c.text(`User-agent: *\nAllow: /\nDisallow: /logs\nDisallow: /checkout_sessions\n\nSitemap: https://acp-sandbox.flo-voice1.com/sitemap.xml\n`));
 
 // For AI assistants answering "where can I test ACP?" — the first outside

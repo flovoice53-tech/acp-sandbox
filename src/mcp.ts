@@ -90,6 +90,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "list_products",
     {
       title: "List products",
+      annotations: { readOnlyHint: true, openWorldHint: false },
       description: "List everything the demo store sells, with product ids and prices. Prices are in USD.",
       inputSchema: {},
     },
@@ -100,6 +101,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "create_checkout",
     {
       title: "Create a checkout",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
       description:
         "Start a checkout (an Agentic Commerce Protocol checkout session) with the products and quantities the user wants. Returns the session id, the cart and its total. If you have no api_key yet, leave it out: a sandbox key is created and returned — reuse it in every later call.",
       inputSchema: {
@@ -142,6 +144,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "update_checkout",
     {
       title: "Change the cart",
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
       description: "Replace the items in an open checkout (e.g. the user changed their mind). Any PayPal payment created for the old total is dropped — request a new one.",
       inputSchema: {
         session_id: z.string(),
@@ -167,6 +170,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "get_checkout",
     {
       title: "Get a checkout",
+      annotations: { readOnlyHint: true, openWorldHint: false },
       description: "Read the current cart, total, payment status and order of a checkout.",
       inputSchema: { session_id: z.string(), api_key: apiKeyArg },
     },
@@ -183,6 +187,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "request_paypal_payment",
     {
       title: "Ask the user to pay with PayPal",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
       description:
         "Create a PayPal (sandbox) payment for the checkout's exact total. Returns approve_url: give that link to the user and ask them to approve the payment on PayPal — you cannot approve it yourself. Then call wait_for_payment_approval.",
       inputSchema: { session_id: z.string(), api_key: apiKeyArg },
@@ -208,6 +213,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "wait_for_payment_approval",
     {
       title: "Wait for the user to approve the PayPal payment",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: `Wait (up to ${MAX_WAIT_SECONDS}s per call) until PayPal reports the user approved the payment. If it returns still_waiting, the user hasn't approved yet — ask them, then call again.`,
       inputSchema: {
         session_id: z.string(),
@@ -249,6 +255,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "complete_checkout",
     {
       title: "Complete the checkout",
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
       description:
         "Place the order. With payment \"paypal\" the approved PayPal payment is captured first, and the order only goes through if PayPal confirms the money for the exact total. \"mock\" skips real payment (testing only).",
       inputSchema: {
@@ -279,6 +286,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     "cancel_checkout",
     {
       title: "Cancel a checkout",
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
       description: "Cancel an open checkout. Nothing is charged.",
       inputSchema: { session_id: z.string(), api_key: apiKeyArg },
     },

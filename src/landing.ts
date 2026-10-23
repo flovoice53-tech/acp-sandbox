@@ -140,7 +140,7 @@ curl -X POST ${BASE}/checkout_sessions/{id}/complete \\
 </ul>
 
 <footer>
-acp-sandbox is an independent testing tool, not affiliated with OpenAI or Stripe. Built by the team behind <a href="https://flo-voice1.com">flo-voice1.com</a>.
+acp-sandbox is an independent testing tool, not affiliated with OpenAI or Stripe. Built by the team behind <a href="https://flo-voice1.com">flo-voice1.com</a>. <a href="/privacy">Privacy</a>.
 </footer>
 
 </div>
@@ -253,3 +253,50 @@ ${state?.sessionId ? `<p>Checkout session: <code>${escapeHtml(state.sessionId)}<
 </body>
 </html>`;
 }
+
+
+// Privacy policy, required for the Claude connector directory listing. States
+// only what the code actually does: the sandbox keeps keys, emails and request
+// logs in its database and has no automatic deletion.
+export const PRIVACY_HTML = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy — acp-sandbox</title>
+<link rel="canonical" href="${BASE}/privacy">
+<style>
+  :root{ color-scheme: light dark; --fg:#1a1a1a; --bg:#fbfbf9; --muted:#5c5c5c; --accent:#b3401f; }
+  @media (prefers-color-scheme: dark){ :root{ --fg:#e8e8e3; --bg:#161613; --muted:#a0a09a; --accent:#e0805f; } }
+  body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--fg);background:var(--bg)}
+  .wrap{max-width:680px;margin:0 auto;padding:40px 20px}
+  a{color:var(--accent)} h1{font-size:28px} h2{font-size:18px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Privacy policy</h1>
+<p>acp-sandbox is a test sandbox that imitates a merchant implementing the Agentic Commerce Protocol. It is operated by Flovoice SRL (Romania). No real money moves: payments go through PayPal's sandbox (test) environment only.</p>
+
+<h2>What we collect</h2>
+<ul>
+<li><strong>Sandbox API key and email.</strong> When a key is issued, we store the key and the email you provided. If you give none, a placeholder address is stored.</li>
+<li><strong>Request logs.</strong> For each call (REST or MCP tool) we store your key, the endpoint or tool name, the request body, the response status and the response body, so the dashboard can show your checkout steps.</li>
+<li><strong>Checkout data.</strong> The carts, buyer email (if you pass one) and test order data you create.</li>
+<li>Standard web-server logs (IP address, time, URL) are kept by our web server.</li>
+</ul>
+<p>We do not collect payment card numbers or real personal payment data. Do not send real personal data to this sandbox.</p>
+
+<h2>How it is used</h2>
+<p>Only to run the sandbox and show you your own request log. We do not sell data, do not use it for advertising and do not share it with third parties, except PayPal's sandbox, which receives the order amount and reference needed to create a test payment.</p>
+
+<h2>Storage and retention</h2>
+<p>Data is stored in a database on our server in the EU. There is no automatic deletion at the moment: data is kept until you ask us to delete it.</p>
+
+<h2>Your rights and contact</h2>
+<p>To access or delete the data tied to your sandbox key or email, write to <a href="mailto:florin@flo-voice.com">florin@flo-voice.com</a> with your key or email address. Under the GDPR you may also lodge a complaint with your national data protection authority.</p>
+
+<p><a href="/">Back to acp-sandbox</a></p>
+</div>
+</body>
+</html>`;

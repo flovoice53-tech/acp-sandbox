@@ -14,7 +14,7 @@ import {
   updateSession,
 } from "./checkout.js";
 import type { ApiError } from "./types.js";
-import { LANDING_HTML, orderHtml, paypalReturnHtml } from "./landing.js";
+import { LANDING_HTML, PRIVACY_HTML, orderHtml, paypalReturnHtml } from "./landing.js";
 import { DASHBOARD_HTML } from "./dashboard.js";
 import { logRequest } from "./log.js";
 import { buildMcpServer } from "./mcp.js";
@@ -81,6 +81,8 @@ Base URL: https://acp-sandbox.flo-voice1.com
 `;
 
 app.get("/llms.txt", (c) => c.text(LLMS_TXT));
+
+app.get("/privacy", (c) => c.html(PRIVACY_HTML));
 
 app.get("/sitemap.xml", (c) =>
   c.text(

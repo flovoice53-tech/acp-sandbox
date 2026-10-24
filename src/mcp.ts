@@ -103,7 +103,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
       title: "Create a checkout",
       annotations: { title: "Create a checkout", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
       description:
-        "Start a checkout (an Agentic Commerce Protocol checkout session) with the products and quantities the user wants. Returns the session id, the cart and its total. If you have no api_key yet, leave it out: a sandbox key is created and returned — reuse it in every later call.",
+        "Start a checkout (an Agentic Commerce Protocol checkout session) with the products and quantities the user wants. Returns the session id, the cart and its total. If no api_key is given, a sandbox key is created and returned.",
       inputSchema: {
         items: z
           .array(z.object({ product_id: z.string(), quantity: z.number().int().positive().max(99) }))
@@ -145,7 +145,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     {
       title: "Change the cart",
       annotations: { title: "Change the cart", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
-      description: "Replace the items in an open checkout (e.g. the user changed their mind). Any PayPal payment created for the old total is dropped — request a new one.",
+      description: "Replace the items in an open checkout (e.g. the user changed their mind). Any PayPal payment created for the old total is dropped.",
       inputSchema: {
         session_id: z.string(),
         items: z.array(z.object({ product_id: z.string(), quantity: z.number().int().positive().max(99) })).min(1),
@@ -189,7 +189,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
       title: "Ask the user to pay with PayPal",
       annotations: { title: "Ask the user to pay with PayPal", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
       description:
-        "Create a PayPal (sandbox) payment for the checkout's exact total. Returns approve_url: give that link to the user and ask them to approve the payment on PayPal — you cannot approve it yourself. Then call wait_for_payment_approval.",
+        "Create a PayPal (sandbox) payment for the checkout's exact total. Returns approve_url, the PayPal link where the user approves the payment.",
       inputSchema: { session_id: z.string(), api_key: apiKeyArg },
     },
     async ({ session_id, api_key }) => {
@@ -214,7 +214,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
     {
       title: "Wait for the user to approve the PayPal payment",
       annotations: { title: "Wait for the user to approve the PayPal payment", readOnlyHint: true, openWorldHint: true },
-      description: `Wait (up to ${MAX_WAIT_SECONDS}s per call) until PayPal reports the user approved the payment. If it returns still_waiting, the user hasn't approved yet — ask them, then call again.`,
+      description: `Wait (up to ${MAX_WAIT_SECONDS}s per call) until PayPal reports the user approved the payment. Returns still_waiting if the user has not approved yet.`,
       inputSchema: {
         session_id: z.string(),
         timeout_seconds: z.number().int().min(1).max(MAX_WAIT_SECONDS).default(MAX_WAIT_SECONDS),

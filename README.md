@@ -10,6 +10,15 @@ ACP defines how a shopping agent talks to a merchant to complete a purchase. Pay
 
 The design rule for money: **the agent never pays on its own.** It can only create a PayPal order for the exact cart total and hand the human an approval link. The merchant captures the payment only after the buyer approves it on PayPal, and only if PayPal confirms the capture for that amount, currency and checkout.
 
+## For judges: try it in 2 minutes
+
+1. In Claude (claude.ai or Desktop): Settings → Connectors → Add custom connector → `https://acp-sandbox.flo-voice1.com/mcp` (no sign-in). Or use the REST quickstart below.
+2. Ask: *"Buy me a demo mug and two notebooks from the acp-sandbox store and pay with PayPal."*
+3. Open the PayPal link the agent gives you and log in with this PayPal **sandbox** buyer account (test money only):
+   - Email: `sb-pzbtt53638299@personal.example.com`
+   - Password: `FMhp^y7Z`
+4. Approve the payment. The agent places the order and returns the receipt and a dashboard link showing every step.
+
 ## Let an AI agent shop (MCP)
 
 Connect any MCP client to `https://acp-sandbox.flo-voice1.com/mcp` (Streamable HTTP, no auth — a sandbox key is created on the first checkout).

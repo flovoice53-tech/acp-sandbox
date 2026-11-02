@@ -72,7 +72,7 @@ Auth:            none (a sandbox key is created on the first checkout)</code></p
 </table>
 
 <h2>The gap this fills</h2>
-<p>ACP defines how a shopping agent talks to a merchant to complete a purchase. Stripe's test mode covers the <em>payment</em> side — test cards, test keys — but there is no hosted "fake merchant" you can point a third-party ACP client at to check that your own logic actually works: building a session, patching line items, handling a <code>422</code>, reading back an <code>Order</code>. That is all this does.</p>
+<p>ACP defines how a shopping agent talks to a merchant to complete a purchase. Payment sandboxes such as PayPal's cover the <em>payment</em> side, but there is no hosted "fake merchant" you can point a third-party ACP client at to check that your own logic actually works: building a session, patching line items, handling a <code>422</code>, reading back an <code>Order</code>. acp-sandbox is that merchant, with a real PayPal sandbox payment behind every checkout.</p>
 
 <h2>Quickstart</h2>
 <p>1 — get a test key (this is a sandbox, so the key is issued on the spot):</p>

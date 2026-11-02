@@ -228,6 +228,7 @@ export function buildMcpServer(connectionKey: string | undefined): McpServer {
       for (;;) {
         const session = loadSession(key, session_id);
         if (!session) return fail("session_not_found: No such checkout session");
+        if (session.status === "canceled") return fail("session_canceled: This checkout was canceled; start a new one.");
         const payment = session.payment;
         if (!payment) return fail("no_payment: Call request_paypal_payment first.");
         if (payment.status !== "awaiting_approval") {

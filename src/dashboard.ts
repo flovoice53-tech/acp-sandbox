@@ -93,8 +93,8 @@ export const DASHBOARD_HTML = `<!doctype html>
     return d;
   }
 
-  var PAYMENT_TEXT = { awaiting_approval: "PayPal: waiting for buyer approval", approved: "PayPal: approved, not captured yet", captured: "PayPal: paid" };
-  var PAYMENT_CLASS = { awaiting_approval: "warn", approved: "warn", captured: "ok" };
+  var PAYMENT_TEXT = { awaiting_approval: "PayPal: waiting for buyer approval", approved: "PayPal: approved, not captured yet", captured: "PayPal: paid", voided: "PayPal: voided (checkout canceled)" };
+  var PAYMENT_CLASS = { awaiting_approval: "warn", approved: "warn", captured: "ok", voided: "bad" };
 
   function render(requests, sessionsNow) {
     sessionsNow = sessionsNow || {};

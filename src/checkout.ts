@@ -357,6 +357,12 @@ export function cancelSession(
     };
   }
   session.status = "canceled";
+  // An uncaptured PayPal order can't pay for a canceled session: stop offering
+  // its approval link so nobody approves money for an order that won't ship.
+  if (session.payment && session.payment.status !== "captured") {
+    session.payment.status = "voided";
+    session.links = session.links.filter((l) => l.type !== "payment_approval");
+  }
   session.updated_at = new Date().toISOString();
   saveSession(apiKey, session);
   return { session };

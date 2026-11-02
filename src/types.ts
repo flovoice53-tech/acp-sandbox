@@ -118,7 +118,8 @@ export type PayPalPayment = {
   approve_url: string;
   amount: number; // minor units, the session total the order was created for
   currency: string;
-  status: "awaiting_approval" | "approved" | "captured";
+  // voided: the session was canceled before capture; the order is never captured.
+  status: "awaiting_approval" | "approved" | "captured" | "voided";
   capture_id?: string;
 };
 

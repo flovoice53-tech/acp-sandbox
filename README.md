@@ -4,6 +4,8 @@ A hosted mock merchant implementing the [Agentic Commerce Protocol](https://gith
 
 Live at **https://acp-sandbox.flo-voice1.com** · MCP server: **https://acp-sandbox.flo-voice1.com/mcp** · Source: **https://gitlab.com/florin-builds/acp-sandbox**
 
+Launching on TinyLaunch this week. If you like it, an upvote helps: https://tinylaunch.com/launch/24070-acp-sandbox
+
 ## Why
 
 ACP defines how a shopping agent talks to a merchant to complete a purchase. Payment providers' test modes cover the *payment* side, but there's no hosted "fake merchant" an agent developer can point their code at to check the whole thing works: building a cart, changing it, getting it paid, handling errors, reading back an order. acp-sandbox is that merchant — and the payment behind its checkout is a real PayPal Orders v2 flow against the PayPal sandbox.

@@ -137,6 +137,7 @@ curl -X POST ${BASE}/checkout_sessions/{id}/complete \\
 <ul>
 <li>Code + full docs: <a href="https://gitlab.com/florin-builds/acp-sandbox">gitlab.com/florin-builds/acp-sandbox</a></li>
 <li>ACP specification: <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol">agentic-commerce-protocol/agentic-commerce-protocol</a></li>
+<li>Launching on TinyLaunch this week: <a href="https://tinylaunch.com/launch/24070-acp-sandbox">an upvote helps</a></li>
 </ul>
 
 <footer>

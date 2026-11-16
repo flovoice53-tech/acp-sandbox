@@ -204,6 +204,7 @@ ${rows}
 ${totalRows}
 </table>
 <p><a href="/">acp-sandbox</a> — this is a mock order from a test sandbox, not a real purchase.</p>
+<p><a href="https://tinylaunch.com/launch/24070-acp-sandbox" target="_blank" rel="noopener"><img src="/tinylaunch-badge.svg" alt="TinyLaunch 2nd Place badge" width="202" height="61" style="height:auto"></a></p>
 </div>
 </body>
 </html>`;
@@ -251,6 +252,7 @@ export function paypalReturnHtml(state: { approved: boolean; sessionId?: string;
 <p>${body}</p>
 ${state?.sessionId ? `<p>Checkout session: <code>${escapeHtml(state.sessionId)}</code> — follow it on the <a href="/dashboard">dashboard</a>.</p>` : ""}
 <p><a href="/">acp-sandbox</a> — PayPal sandbox payment, no real money.</p>
+<p><a href="https://tinylaunch.com/launch/24070-acp-sandbox" target="_blank" rel="noopener"><img src="/tinylaunch-badge.svg" alt="TinyLaunch 2nd Place badge" width="202" height="61" style="height:auto"></a></p>
 </div>
 </body>
 </html>`;
@@ -299,6 +301,7 @@ export const PRIVACY_HTML = `<!doctype html>
 <p>To access or delete the data tied to your sandbox key or email, write to <a href="mailto:florin@flo-voice.com">florin@flo-voice.com</a> with your key or email address. Under the GDPR you may also lodge a complaint with your national data protection authority.</p>
 
 <p><a href="/">Back to acp-sandbox</a></p>
+<p><a href="https://tinylaunch.com/launch/24070-acp-sandbox" target="_blank" rel="noopener"><img src="/tinylaunch-badge.svg" alt="TinyLaunch 2nd Place badge" width="202" height="61" style="height:auto"></a></p>
 </div>
 </body>
 </html>`;

@@ -137,10 +137,11 @@ curl -X POST ${BASE}/checkout_sessions/{id}/complete \\
 <ul>
 <li>Code + full docs: <a href="https://gitlab.com/florin-builds/acp-sandbox">gitlab.com/florin-builds/acp-sandbox</a></li>
 <li>ACP specification: <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol">agentic-commerce-protocol/agentic-commerce-protocol</a></li>
-<li>Launching on TinyLaunch this week: <a href="https://tinylaunch.com/launch/24070-acp-sandbox">an upvote helps</a></li>
+<li>Ranked #2 on TinyLaunch: <a href="https://tinylaunch.com/launch/24070-acp-sandbox">launch page</a></li>
 </ul>
 
 <footer>
+<p><a href="https://tinylaunch.com/launch/24070-acp-sandbox" target="_blank" rel="noopener"><img src="/tinylaunch-badge.svg" alt="TinyLaunch 2nd Place badge" width="202" height="61" style="height:auto"></a></p>
 acp-sandbox is an independent testing tool, not affiliated with OpenAI or Stripe. Built by the team behind <a href="https://flo-voice1.com">flo-voice1.com</a>. <a href="/privacy">Privacy</a>.
 </footer>
 

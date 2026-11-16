@@ -4,9 +4,7 @@ A hosted mock merchant implementing the [Agentic Commerce Protocol](https://gith
 
 Live at **https://acp-sandbox.flo-voice1.com** · MCP server: **https://acp-sandbox.flo-voice1.com/mcp** · Source: **https://gitlab.com/florin-builds/acp-sandbox**
 
-[![TinyLaunch 2nd Place](https://tinylaunch.com/tinylaunch_badge_2.svg)](https://tinylaunch.com/launch/24070-acp-sandbox)
-
-Ranked #2 of 651 launches on [TinyLaunch](https://tinylaunch.com/launch/24070-acp-sandbox).
+Launching on TinyLaunch this week. If you like it, an upvote helps: https://tinylaunch.com/launch/24070-acp-sandbox
 
 ## Why
 

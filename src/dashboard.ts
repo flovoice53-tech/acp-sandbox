@@ -215,6 +215,5 @@ export const DASHBOARD_HTML = `<!doctype html>
   }
 })();
 </script>
-<div style="text-align:center;margin:24px 0"><p><a href="https://tinylaunch.com/launch/24070-acp-sandbox" target="_blank" rel="noopener"><img src="/tinylaunch-badge.svg" alt="TinyLaunch 2nd Place badge" width="202" height="61" style="height:auto"></a></p></div>
 </body>
 </html>`;

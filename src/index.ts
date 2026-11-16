@@ -14,7 +14,6 @@ import {
   updateSession,
 } from "./checkout.js";
 import type { ApiError } from "./types.js";
-import { readFileSync } from "node:fs";
 import { LANDING_HTML, PRIVACY_HTML, orderHtml, paypalReturnHtml } from "./landing.js";
 import { DASHBOARD_HTML } from "./dashboard.js";
 import { logRequest } from "./log.js";
@@ -28,10 +27,6 @@ const app = new Hono();
 function errorResponse(error: ApiError, status: 400 | 404 | 405 | 422 = 400) {
   return { body: error, status };
 }
-
-const BADGE_SVG = readFileSync(new URL("../src/assets/tinylaunch_badge_2.svg", import.meta.url), "utf8");
-app.get("/tinylaunch-badge.svg", (c) =>
-  c.body(BADGE_SVG, 200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" }));
 
 app.get("/", (c) => {
   // JSON clients (agents probing the root) still get the terse text; browsers get the page.
